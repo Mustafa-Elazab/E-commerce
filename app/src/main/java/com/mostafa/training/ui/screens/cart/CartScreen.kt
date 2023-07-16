@@ -58,6 +58,7 @@ import com.mostafa.training.ui.theme.AppTypography
 import com.mostafa.training.ui.theme.CardBackgroundColor
 import com.mostafa.training.ui.theme.WhiteColor
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -68,8 +69,9 @@ fun CartScreen(
     calculateBottomPadding: Dp,
     navController: NavController
 ) {
-    val viewModel: CartViewModel = getViewModel()
-    val cartUiState = viewModel.cartUiState.collectAsState().value
+
+    val viewModel: CartViewModel = koinViewModel()
+    val cartUiState by viewModel.cartUiState.collectAsState()
 
 
     Scaffold(
@@ -110,7 +112,11 @@ fun CartScreen(
                             quantity = viewModel.getCartItemQuantity(cart?.id!!),
                             onQuantityChange = { newQuantity ->
                                 viewModel.updateCartItemQuantity(newQuantity, cart?.id!!)
-                            })
+                            },
+                            onRemoveClick = {
+                                viewModel.addOrRemoveItemFromCart(it)
+                            }
+                            )
                     }
                 }
             }
@@ -229,7 +235,8 @@ fun CheckOutContainer(
 private fun CartItem(
     cart: CartItemDTO?,
     quantity: Int,
-    onQuantityChange: (Int) -> Unit
+    onQuantityChange: (Int) -> Unit,
+    onRemoveClick: (Int) -> Unit
 ) {
 
 
@@ -347,7 +354,7 @@ private fun CartItem(
                             .height(32.dp)
                             .clickable {
 
-
+                                onRemoveClick(cart.product?.id!!)
                             }
                             .background(WhiteColor)
                             .border(

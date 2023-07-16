@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,6 +88,7 @@ import com.mostafa.training.ui.theme.SecondaryTextColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
@@ -95,12 +97,12 @@ fun HomeScreen(
     navController: NavController,
 
     ) {
-    val viewModel: HomeViewModel = getViewModel()
+    val viewModel: HomeViewModel = koinViewModel()
     val cartViewModel: CartViewModel = getViewModel()
 
-    val bannerUiState = viewModel.bannersUiState.collectAsState().value
-    val categoryUiState = viewModel.categoriesUiState.collectAsState().value
-    val productsUiState = viewModel.productsUiState.collectAsState().value
+    val bannerUiState by viewModel.bannersUiState.collectAsState()
+    val categoryUiState by viewModel.categoriesUiState.collectAsState()
+    val productsUiState by viewModel.productsUiState.collectAsState()
 
     val context = LocalContext.current
 
@@ -223,7 +225,9 @@ fun ProductsItems(
                     product,
                     isSearchScreen = false,
                     onClickProductItem = onClickProductItem,
-                    onClickItemCart = onClickItemCart,
+                    onClickItemCart = {
+                        onClickItemCart(it)
+                    },
                     modifier = Modifier
                 )
             }
@@ -241,7 +245,8 @@ fun ProductItem(
 ) {
     val context = LocalContext.current
     val cartViewModel: CartViewModel = getViewModel()
-    val addOrRemoveUiState = cartViewModel.addOrRemoveUiState.collectAsState().value
+    val addOrRemoveUiState by cartViewModel.addOrRemoveUiState.collectAsState()
+    Log.d("TAG", "ProductItem: ${product}")
 
     Card(
         modifier = Modifier
@@ -322,9 +327,20 @@ fun ProductItem(
                 IconButton(
                     onClick = {
 
+                        Toast.makeText(context,
+                            product.inCart.toString(),
+                            Toast.LENGTH_SHORT
+                        ).show()
+
                         onClickItemCart(product.id!!)
 
-                        Toast.makeText(context, "${addOrRemoveUiState.addRemoveCartItemDTO?.message.toString()}", Toast.LENGTH_SHORT).show()
+//                        if(product.id == addOrRemoveUiState.addRemoveCartItemDTO!!.data!!.product!!.id){
+//                            Toast.makeText(context,
+//                                addOrRemoveUiState.addRemoveCartItemDTO?.message.toString(), Toast.LENGTH_SHORT).show()
+//                        }
+
+
+
                     },
                     modifier = Modifier
                         .clip(CircleShape)

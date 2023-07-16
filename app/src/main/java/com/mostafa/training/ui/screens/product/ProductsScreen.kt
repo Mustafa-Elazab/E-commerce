@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -37,7 +38,7 @@ fun ProductsScreen(navController: NavController) {
 
     val viewModel: HomeViewModel = getViewModel()
     val cartViewModel: CartViewModel = getViewModel()
-    val productsUiState = viewModel.productsUiState.collectAsState().value
+    val productsUiState by viewModel.productsUiState.collectAsState()
 
     Scaffold(
         topBar = {

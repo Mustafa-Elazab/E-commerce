@@ -30,6 +30,7 @@ import com.mostafa.training.ui.components.SpacerVertical
 import com.mostafa.training.ui.components.Title
 import com.mostafa.training.ui.theme.AppTypography
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ProfileScreen(
@@ -37,7 +38,7 @@ fun ProfileScreen(
     navController: NavController
 ) {
 
-    val viewModel: ProfileViewModel = getViewModel()
+    val viewModel: ProfileViewModel = koinViewModel()
     val profileUiState = viewModel.profileUiState.collectAsState().value
 
     Column(

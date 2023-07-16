@@ -50,6 +50,7 @@ import com.mostafa.training.ui.theme.AccentColor
 import com.mostafa.training.ui.theme.AppTypography
 import com.mostafa.training.ui.theme.PrimaryTextAndIconColor
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -57,7 +58,7 @@ import org.koin.androidx.compose.getViewModel
 fun ProductDetailScreen(
     navController: NavController,
 ) {
-    val viewModel: ProductDetailViewModel = getViewModel()
+    val viewModel: ProductDetailViewModel = koinViewModel()
     val productUiState = viewModel.productDetailState.collectAsState().value
     val context = LocalContext.current
     Log.d("TAG", "ProductDetailScreen: $productUiState")

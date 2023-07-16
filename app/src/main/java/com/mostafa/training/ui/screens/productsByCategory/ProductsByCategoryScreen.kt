@@ -29,12 +29,13 @@ import com.mostafa.training.ui.screens.home.ProductItem
 import com.mostafa.training.ui.screens.product_detail.navigateToDetailScreen
 import com.mostafa.training.ui.theme.BaseColor
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductsByCategoryScreen(navController: NavController) {
 
-    val viewModel: ProductsByCategoryViewModel = getViewModel()
+    val viewModel: ProductsByCategoryViewModel = koinViewModel()
     val cartViewModel: CartViewModel = getViewModel()
     val productsByCategoryUiState = viewModel.productsUiState.collectAsState().value
     val context = LocalContext.current

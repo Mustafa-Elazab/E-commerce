@@ -91,52 +91,7 @@ class HomeViewModel(
 
     }
 
-    private fun loadBanners() {
-        viewModelScope.launch {
-            _bannersUiState.update { it.copy(isLoading = true) }
-            when (val response = bannerUseCase.getBanners()) {
-                is NetworkResponse.ApiError -> {
-                    _bannersUiState.update {
-                        BannerUiState(
-                            error = response.body.message.toString(),
-                            isLoading = false
-                        )
-                    }
-                }
 
-                is NetworkResponse.NetworkError -> {
-                    _bannersUiState.update {
-                        BannerUiState(
-                            error = response.error.message.toString(),
-                            isLoading = false
-                        )
-                    }
-                }
-
-                is NetworkResponse.Success -> {
-                    _bannersUiState.update {
-                        BannerUiState(
-                            banners = response.body.data,
-                            isLoading = false
-                        )
-                    }
-                }
-
-                is NetworkResponse.UnknownError -> {
-                    _bannersUiState.update {
-                        BannerUiState(
-                            error = response.error!!.message.toString(),
-                            isLoading = false
-                        )
-                    }
-                }
-
-                else -> {
-                    _bannersUiState.update { it.copy(isLoading = false) }
-                }
-            }
-        }
-    }
 
 
     private fun loadCategories() {
@@ -181,6 +136,54 @@ class HomeViewModel(
 
                 else -> {
                     _categoriesUiState.update { it.copy(isLoading = false) }
+                }
+            }
+        }
+    }
+
+
+    private fun loadBanners() {
+        viewModelScope.launch {
+            _bannersUiState.update { it.copy(isLoading = true) }
+            when (val response = bannerUseCase.getBanners()) {
+                is NetworkResponse.ApiError -> {
+                    _bannersUiState.update {
+                        BannerUiState(
+                            error = response.body.message.toString(),
+                            isLoading = false
+                        )
+                    }
+                }
+
+                is NetworkResponse.NetworkError -> {
+                    _bannersUiState.update {
+                        BannerUiState(
+                            error = response.error.message.toString(),
+                            isLoading = false
+                        )
+                    }
+                }
+
+                is NetworkResponse.Success -> {
+                    _bannersUiState.update {
+                        BannerUiState(
+                            banners = response.body.data,
+                            isLoading = false
+                        )
+                    }
+                }
+
+                is NetworkResponse.UnknownError -> {
+                    _bannersUiState.update {
+                        BannerUiState(
+                            error = response.error!!.message.toString(),
+                            isLoading = false
+                        )
+                    }
+                }
+
+                else -> {
+                    _bannersUiState.update { it.copy(isLoading = false) }
                 }
             }
         }

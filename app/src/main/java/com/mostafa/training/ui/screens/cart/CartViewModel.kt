@@ -16,6 +16,8 @@ import com.mostafa.training.ui.screens.cart.uiState.UpdateCartUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -48,54 +50,106 @@ class CartViewModel(
     }
 
 
-    private fun loadingProductsInCart() {
+     private fun loadingProductsInCart() {
+         viewModelScope.launch {
+             _cartUiState.update { it.copy(isLoading = true) }
+             cartItemsUseCase.invoke(authorization = "NN8p3D6X3dQL0GllyvSSQwY4J4v2fDQ8wIdQWDrnVGNoYrDMpkdVuLgEN6HULhotByHqjK")
+                 .collectLatest { response ->
+                     when (response) {
+                         is NetworkResponse.ApiError -> {
+                             _cartUiState.update {
+                                 CartUiState(
+                                     error = response.body.message.toString(), isLoading = false
+                                 )
+                             }
+                         }
+
+                         is NetworkResponse.NetworkError -> {
+                             _cartUiState.update {
+                                 CartUiState(
+                                     error = response.error.message.toString(), isLoading = false
+                                 )
+                             }
+                         }
+
+                         is NetworkResponse.Success -> {
+                             updateCartItemQuantities(response.body.data?.cartItems)
+                             _cartUiState.update {
+                                 CartUiState(
+                                     cartData = response.body.data, isLoading = false
+                                 )
+                             }
+                         }
+
+                         is NetworkResponse.UnknownError -> {
+                             _cartUiState.update {
+                                 CartUiState(
+                                     error = response.error!!.message.toString(), isLoading = false
+                                 )
+                             }
+                         }
+
+                         else
+                         -> {
+                             _cartUiState.update { it.copy(isLoading = false) }
+                         }
+                     }
+                 }
+         }
+
+    }
+
+    fun addOrRemoveItemFromCart(product_id: Int) {
         viewModelScope.launch {
-            _cartUiState.update { it.copy(isLoading = true) }
-            cartItemsUseCase.invoke(authorization = "NN8p3D6X3dQL0GllyvSSQwY4J4v2fDQ8wIdQWDrnVGNoYrDMpkdVuLgEN6HULhotByHqjK")
-                .collectLatest { response ->
-                    when (response) {
-                        is NetworkResponse.ApiError -> {
-                            _cartUiState.update {
-                                CartUiState(
-                                    error = response.body.message.toString(), isLoading = false
-                                )
-                            }
-                        }
+            _addOrRemoveUiState.update { it.copy(isLoading = true) }
 
-                        is NetworkResponse.NetworkError -> {
-                            _cartUiState.update {
-                                CartUiState(
-                                    error = response.error.message.toString(), isLoading = false
-                                )
-                            }
-                        }
-
-                        is NetworkResponse.Success -> {
-                            updateCartItemQuantities(response.body.data?.cartItems)
-                            _cartUiState.update {
-                                CartUiState(
-                                    cartData = response.body.data, isLoading = false
-                                )
-                            }
-                        }
-
-                        is NetworkResponse.UnknownError -> {
-                            _cartUiState.update {
-                                CartUiState(
-                                    error = response.error!!.message.toString(), isLoading = false
-                                )
-                            }
-                        }
-
-                        else
-                        -> {
-                            _cartUiState.update { it.copy(isLoading = false) }
+            addOrRemoveCartUseCase.invoke(
+                authorization = "NN8p3D6X3dQL0GllyvSSQwY4J4v2fDQ8wIdQWDrnVGNoYrDMpkdVuLgEN6HULhotByHqjK",
+                product_id = product_id
+            ).collectLatest { response ->
+                when (response) {
+                    is NetworkResponse.ApiError -> {
+                        _addOrRemoveUiState.update {
+                            AddOrRemoveUiState(
+                                error = response.body.message.toString(), isLoading = false
+                            )
                         }
                     }
+
+                    is NetworkResponse.NetworkError -> {
+                        _addOrRemoveUiState.update {
+                            AddOrRemoveUiState(
+                                error = response.error.message.toString(), isLoading = false
+                            )
+                        }
+                    }
+
+                    is NetworkResponse.Success -> {
+                        loadingProductsInCart()
+                        _addOrRemoveUiState.update {
+                            AddOrRemoveUiState(
+                                addRemoveCartItemDTO = response.body, isLoading = false
+                            )
+                        }
+
+                    }
+
+                    is NetworkResponse.UnknownError -> {
+                        _addOrRemoveUiState.update {
+                            AddOrRemoveUiState(
+                                error = response.error!!.message.toString(), isLoading = false
+                            )
+                        }
+                    }
+
+                    else
+                    -> {
+                        _addOrRemoveUiState.update { it.copy(isLoading = false) }
+                    }
                 }
+            }
 
         }
-
     }
 
     fun updateCartItemQuantities(cartItems: List<CartItemDTO?>?) {
@@ -146,6 +200,7 @@ class CartViewModel(
                     is NetworkResponse.Success -> {
 
                         updateCartItemQuantityInMap(cartId, quantity)
+                        loadingProductsInCart()
                         _updateCartUiState.update {
                             UpdateCartUiState(
                                 cartUpdateData = response.body.data, isLoading = false
@@ -170,56 +225,8 @@ class CartViewModel(
     }
 
 
-    fun addOrRemoveItemFromCart(product_id: Int) {
-        viewModelScope.launch {
-            _addOrRemoveUiState.update { it.copy(isLoading = true) }
 
-            addOrRemoveCartUseCase.invoke(
-                authorization = "NN8p3D6X3dQL0GllyvSSQwY4J4v2fDQ8wIdQWDrnVGNoYrDMpkdVuLgEN6HULhotByHqjK",
-                product_id = product_id
-            ).collectLatest { response ->
-                when (response) {
-                    is NetworkResponse.ApiError -> {
-                        _addOrRemoveUiState.update {
-                            AddOrRemoveUiState(
-                                error = response.body.message.toString(), isLoading = false
-                            )
-                        }
-                    }
 
-                    is NetworkResponse.NetworkError -> {
-                        _addOrRemoveUiState.update {
-                            AddOrRemoveUiState(
-                                error = response.error.message.toString(), isLoading = false
-                            )
-                        }
-                    }
-
-                    is NetworkResponse.Success -> {
-                        _addOrRemoveUiState.update {
-                            AddOrRemoveUiState(
-                                addRemoveCartItemDTO = response.body, isLoading = false
-                            )
-                        }
-                    }
-
-                    is NetworkResponse.UnknownError -> {
-                        _addOrRemoveUiState.update {
-                            AddOrRemoveUiState(
-                                error = response.error!!.message.toString(), isLoading = false
-                            )
-                        }
-                    }
-
-                    else
-                    -> {
-                        _addOrRemoveUiState.update { it.copy(isLoading = false) }
-                    }
-                }
-            }
-
-        }
-    }
 
 
 }

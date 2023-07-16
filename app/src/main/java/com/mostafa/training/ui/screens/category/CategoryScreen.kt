@@ -40,12 +40,13 @@ import com.mostafa.training.ui.theme.AppTypography
 import com.mostafa.training.ui.theme.BaseColor
 import com.mostafa.training.ui.theme.CardBackgroundColor
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(navController: NavController) {
 
-    val viewModel: CategoryViewModel = getViewModel()
+    val viewModel: CategoryViewModel = koinViewModel()
     val categoryUiState = viewModel.categoriesUiState.collectAsState().value
 
     Scaffold(

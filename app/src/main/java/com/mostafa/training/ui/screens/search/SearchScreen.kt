@@ -45,13 +45,14 @@ import com.mostafa.training.ui.theme.CardBackgroundColor
 import com.mostafa.training.ui.theme.PrimaryTextAndIconColor
 import com.mostafa.training.ui.theme.SecondaryTextColor
 import org.koin.androidx.compose.getViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SearchScreen(
     calculateBottomPadding: Dp,
     navController: NavController
 ) {
-    val viewModel: SearchViewModel = getViewModel()
+    val viewModel: SearchViewModel = koinViewModel()
     val searchUiState = viewModel.productsUiState.collectAsState().value
     val searchQuery = viewModel.searchQuery.value
     val focusRequester = remember { FocusRequester() }
