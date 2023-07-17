@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mostafa.training.ui.theme.AccentColor
 import com.mostafa.training.ui.theme.SecondaryColor
 
 @Composable
@@ -29,6 +30,6 @@ private fun CircularProgressBar(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = SecondaryColor, modifier = modifier)
+        CircularProgressIndicator(color = AccentColor, modifier = modifier)
     }
 }

@@ -53,7 +53,6 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.Red
-import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -63,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -83,6 +83,9 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mostafa.training.ui.screens.cart.cartRoute
 import com.mostafa.training.ui.screens.category.categoryScreenRoute
+import com.mostafa.training.ui.screens.contact.contactScreenRoute
+import com.mostafa.training.ui.screens.faqs.faqsScreenRoute
+import com.mostafa.training.ui.screens.favorites.favoritesScreenRoute
 import com.mostafa.training.ui.screens.home.homeRoute
 import com.mostafa.training.ui.screens.notification.notificationsRoute
 import com.mostafa.training.ui.screens.product.productsScreenRoute
@@ -90,9 +93,9 @@ import com.mostafa.training.ui.screens.product_detail.productDetailRoute
 import com.mostafa.training.ui.screens.productsByCategory.productsByCategoryScreenRoute
 import com.mostafa.training.ui.screens.profile.profileRoute
 import com.mostafa.training.ui.screens.search.searchRoute
+import com.mostafa.training.ui.screens.splash.splashScreenRoute
 import com.mostafa.training.ui.theme.AccentColor
 import com.mostafa.training.ui.theme.BaseColor
-import com.mostafa.training.ui.theme.IndicatorColor
 import com.mostafa.training.ui.theme.SecondaryTextColor
 import com.mostafa.training.ui.theme.TrainingTheme
 import com.mostafa.training.ui.theme.WhiteColor
@@ -152,7 +155,7 @@ fun BottomNavScreen() {
 
 @Composable
 fun AppNavGraph(navController: NavHostController, calculateBottomPadding: Dp) {
-    NavHost(navController = navController, startDestination = Screen.Home.route) {
+    NavHost(navController = navController, startDestination = "splashScreen") {
         homeRoute(
             calculateBottomPadding,
             navController
@@ -174,6 +177,10 @@ fun AppNavGraph(navController: NavHostController, calculateBottomPadding: Dp) {
         productsScreenRoute(navController = navController)
         categoryScreenRoute(navController = navController)
         productsByCategoryScreenRoute(navController = navController)
+        favoritesScreenRoute(navController = navController)
+        faqsScreenRoute(navController = navController)
+        contactScreenRoute(navController = navController)
+        splashScreenRoute(navController = navController)
     }
 }
 
@@ -431,6 +438,8 @@ fun NormalTextComponent(
     value: String,
     fontSize: Int,
     textAlign: TextAlign,
+    textColor: Color? = Black,
+    fontFamily: FontFamily? = robotoRegular,
     fontWeight: FontWeight? = FontWeight.Normal
 ) {
     Text(
@@ -439,10 +448,11 @@ fun NormalTextComponent(
             .fillMaxWidth(),
         style = TextStyle(
             fontSize = fontSize.sp,
-
+            color = textColor!!,
             fontWeight = fontWeight,
-            fontStyle = FontStyle.Normal
-        ), color = colorResource(id = R.color.black),
+            fontStyle = FontStyle.Normal,
+            fontFamily = fontFamily
+        ),
         textAlign = textAlign
     )
 }

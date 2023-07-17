@@ -56,7 +56,7 @@ class ProductsByCategoryViewModel(
                 is NetworkResponse.Success -> {
                     _productsUiState.update {
                         ProductsUiState(
-                            products = response.body.data!!.data, isLoading = false
+                            products = response.body.data!!.data!!, isLoading = false
                         )
                     }
                 }
@@ -69,7 +69,7 @@ class ProductsByCategoryViewModel(
                     }
                 }
                 else ->{
-
+                    _productsUiState.update { it.copy(isLoading = false) }
                 }
             }
         }

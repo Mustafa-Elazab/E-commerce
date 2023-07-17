@@ -45,12 +45,10 @@ class CartViewModel(
     val total: State<Double> = _total
 
 
-    init {
-        loadingProductsInCart()
-    }
 
 
-     private fun loadingProductsInCart() {
+
+      fun loadingProductsInCart() {
          viewModelScope.launch {
              _cartUiState.update { it.copy(isLoading = true) }
              cartItemsUseCase.invoke(authorization = "NN8p3D6X3dQL0GllyvSSQwY4J4v2fDQ8wIdQWDrnVGNoYrDMpkdVuLgEN6HULhotByHqjK")
@@ -125,7 +123,7 @@ class CartViewModel(
                     }
 
                     is NetworkResponse.Success -> {
-                        loadingProductsInCart()
+                      loadingProductsInCart()
                         _addOrRemoveUiState.update {
                             AddOrRemoveUiState(
                                 addRemoveCartItemDTO = response.body, isLoading = false

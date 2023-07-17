@@ -1,7 +1,6 @@
 package com.mostafa.training.ui.screens.product_detail
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,25 +14,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -45,12 +38,13 @@ import com.mostafa.training.ui.components.BackButton
 import com.mostafa.training.ui.components.CheckUiState
 import com.mostafa.training.ui.components.SpacerVertical
 import com.mostafa.training.ui.components.Title
+import com.mostafa.training.ui.screens.cart.CartViewModel
+import com.mostafa.training.ui.screens.favorites.FavoritesViewModel
+import com.mostafa.training.ui.screens.home.TextWithStrikethrough
 import com.mostafa.training.ui.screens.product_detail.uiState.ProductDetailUiState
 import com.mostafa.training.ui.theme.AccentColor
 import com.mostafa.training.ui.theme.AppTypography
-import com.mostafa.training.ui.theme.PrimaryTextAndIconColor
 import org.koin.androidx.compose.getViewModel
-import org.koin.androidx.compose.koinViewModel
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -58,22 +52,37 @@ import org.koin.androidx.compose.koinViewModel
 fun ProductDetailScreen(
     navController: NavController,
 ) {
-    val viewModel: ProductDetailViewModel = koinViewModel()
+    val viewModel: ProductDetailViewModel = getViewModel()
+    val cartViewModel: CartViewModel = getViewModel()
+    val favoritesViewModel: FavoritesViewModel = getViewModel()
     val productUiState = viewModel.productDetailState.collectAsState().value
+
     val context = LocalContext.current
-    Log.d("TAG", "ProductDetailScreen: $productUiState")
+
 
 
     ProductDetailsContent(
         onClickBack = navController::popBackStack,
-        product = productUiState
+        product = productUiState,
+        onClickCart = {
+            cartViewModel.addOrRemoveItemFromCart(product_id = it)
+        },
+        onClickItemFavorites = {
+            favoritesViewModel.addOrRemoveFavorites(it)
+        }
     )
 
 
 }
 
 @Composable
-fun ProductDetailsContent(onClickBack: () -> Unit, product: ProductDetailUiState?) {
+fun ProductDetailsContent(
+    onClickBack: () -> Unit,
+    product: ProductDetailUiState?,
+    onClickCart: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit
+) {
+
     CheckUiState(
         isLoading = product!!.isLoading,
         error = product.error,
@@ -82,6 +91,9 @@ fun ProductDetailsContent(onClickBack: () -> Unit, product: ProductDetailUiState
         ProductDetailContainer(
             product.data!!,
             onClickBack,
+            onClickCart = onClickCart,
+            onClickItemFavorites = onClickItemFavorites
+
         )
     }
 }
@@ -89,7 +101,13 @@ fun ProductDetailsContent(onClickBack: () -> Unit, product: ProductDetailUiState
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductDetailContainer(product: ProductDTO, onClickBack: () -> Unit) {
+fun ProductDetailContainer(
+    product: ProductDTO,
+    onClickBack: () -> Unit,
+    onClickItemFavorites: (Int) -> Unit,
+    onClickCart: (Int) -> Unit
+) {
+    val cartViewModel: CartViewModel = getViewModel()
 
     Column(
         modifier = Modifier
@@ -98,7 +116,11 @@ fun ProductDetailContainer(product: ProductDTO, onClickBack: () -> Unit) {
     ) {
         LazyColumn(modifier = Modifier.weight(1f)) {
             stickyHeader {
-                BackButton(onClickBack)
+                BackButton(
+                    product = product,
+                    onClickBack = onClickBack,
+                    onClickItemFavorites = onClickItemFavorites
+                )
             }
 
             item {
@@ -131,8 +153,8 @@ fun ProductDetailContainer(product: ProductDTO, onClickBack: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 )
                 {
-                    AddItemToCart(itemCount = mutableStateOf(1))
-                    ContainerClickableButtons(itemCount = mutableStateOf(1))
+                    AddItemToCart(product, onClickCart = onClickCart)
+
                 }
             }
         }
@@ -141,15 +163,16 @@ fun ProductDetailContainer(product: ProductDTO, onClickBack: () -> Unit) {
 }
 
 @Composable
-private fun AddItemToCart(itemCount: MutableState<Int>) {
+private fun AddItemToCart(product: ProductDTO, onClickCart: (Int) -> Unit) {
     Box(
         modifier = Modifier
             .padding(16.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(AccentColor)
-            .clickable { itemCount.value = 1 }
-            .fillMaxHeight()
-            .width(120.dp),
+            .background(AccentColor, shape = RoundedCornerShape(8.dp))
+            .clickable {
+                onClickCart(product.id!!)
+            }
+            .fillMaxSize(),
+
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -164,48 +187,11 @@ private fun AddItemToCart(itemCount: MutableState<Int>) {
                 tint = Color.White
             )
             Title(
-                title = stringResource(id = R.string.add),
+                title = if (product.inCart == true) "In Cart" else "Add Cart",
                 color = Color.White,
                 style = AppTypography.bodyLarge
             )
         }
-    }
-}
-
-@Composable
-private fun ContainerClickableButtons(itemCount: MutableState<Int>) {
-    Row(
-        modifier = Modifier
-            .fillMaxHeight()
-            .width(164.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        ClickableButton("-", itemCount = itemCount.value) {
-            if (it > 1)
-                itemCount.value--
-        }
-        Title(title = itemCount.value.toString(), style = AppTypography.titleLarge)
-        ClickableButton("+", itemCount = itemCount.value) {
-            itemCount.value++
-        }
-    }
-}
-
-@Composable
-private fun ClickableButton(
-    text: String,
-    itemCount: Int,
-    onClick: (Int) -> Unit,
-) {
-    Box(modifier = Modifier
-        .padding(16.dp)
-        .clickable { onClick(itemCount) }
-        .clip(RoundedCornerShape(8.dp))
-        .background(PrimaryTextAndIconColor)
-        .size(32.dp),
-        contentAlignment = Alignment.Center) {
-        Title(title = text, color = Color.White, style = AppTypography.titleLarge)
     }
 }
 
@@ -222,7 +208,15 @@ fun ProductDetails(product: ProductDTO) {
             modifier = Modifier.fillMaxWidth()
         ) {
 
-            Title(title = product.price.toString(), style = AppTypography.titleMedium)
+            Column() {
+                Title(title = product.price.toString(), style = AppTypography.titleMedium)
+                if (product.discount!! > 0) {
+                    TextWithStrikethrough(product.oldPrice.toString())
+
+                }
+            }
+
+
             if (product.discount!! > 0) {
                 Title(
                     title = "${product.discount.toString()}%",

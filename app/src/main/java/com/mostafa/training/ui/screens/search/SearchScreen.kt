@@ -18,6 +18,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,8 @@ import com.mostafa.training.R
 import com.mostafa.training.ui.components.Body
 import com.mostafa.training.ui.components.CheckUiState
 import com.mostafa.training.ui.components.StaticIcon
+import com.mostafa.training.ui.screens.cart.CartViewModel
+import com.mostafa.training.ui.screens.favorites.FavoritesViewModel
 import com.mostafa.training.ui.screens.home.ui_state.ProductsUiState
 import com.mostafa.training.ui.screens.product.ProductContainer
 import com.mostafa.training.ui.screens.product_detail.navigateToDetailScreen
@@ -53,7 +56,9 @@ fun SearchScreen(
     navController: NavController
 ) {
     val viewModel: SearchViewModel = koinViewModel()
-    val searchUiState = viewModel.productsUiState.collectAsState().value
+    val cartViewModel: CartViewModel = getViewModel()
+    val favoritesViewModel: FavoritesViewModel = getViewModel()
+    val searchUiState by viewModel.productsUiState.collectAsState()
     val searchQuery = viewModel.searchQuery.value
     val focusRequester = remember { FocusRequester() }
     val context = LocalContext.current
@@ -69,8 +74,16 @@ fun SearchScreen(
         query = searchQuery,
         focusRequester = focusRequester,
         onTextChange = viewModel::setSearchQuery,
-        onClickAddToCart = {},
-    ) { navController.navigateToDetailScreen(id = it) }
+        onClickAddToCart = {
+            cartViewModel.addOrRemoveItemFromCart(it)
+        },
+        onClickItemFavorites = {
+            favoritesViewModel.addOrRemoveFavorites(it)
+        },
+        onClickProductItem = {
+            navController.navigateToDetailScreen(id = it)
+        }
+    )
 }
 
 @Composable
@@ -80,7 +93,8 @@ fun SearchContent(
     focusRequester: FocusRequester,
     onTextChange: (String) -> Unit,
     onClickAddToCart: (Int) -> Unit,
-    onClickProductItem: (Int) -> Unit
+    onClickProductItem: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -99,7 +113,8 @@ fun SearchContent(
                 onClickAddToCart = onClickAddToCart,
                 onClickProductItem = onClickProductItem,
                 isSearchScreen = true,
-                paddingValues = 0.dp
+                paddingValues = 0.dp,
+                onClickItemFavorites = onClickItemFavorites
             )
         }
     }

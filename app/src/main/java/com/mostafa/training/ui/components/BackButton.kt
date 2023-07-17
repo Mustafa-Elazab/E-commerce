@@ -17,10 +17,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mostafa.training.R
+import com.mostafa.training.data.remote.dto.ProductDTO
 import com.mostafa.training.ui.theme.LightAccentColor
 
 @Composable
-fun BackButton(onClickBack: () -> Unit) {
+fun BackButton(onClickBack: () -> Unit, onClickItemFavorites: (Int) -> Unit, product: ProductDTO) {
     Box(modifier = Modifier.padding(16.dp)) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -46,11 +47,15 @@ fun BackButton(onClickBack: () -> Unit) {
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(LightAccentColor)
-                    .clickable { onClickBack() },
+                    .clickable {
+                        onClickItemFavorites(product.id!!)
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_unselected_fav),
+                    painter = if (product.inFavorites == true)
+                        painterResource(id = R.drawable.ic_selected_fav) else
+                        painterResource(id = R.drawable.ic_unselected_fav),
                     contentDescription = "Previous screen"
                 )
             }

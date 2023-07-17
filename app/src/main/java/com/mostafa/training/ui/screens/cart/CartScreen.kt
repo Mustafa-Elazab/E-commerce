@@ -29,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,19 +38,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.mostafa.training.R
 import com.mostafa.training.SpannableTextExample
 import com.mostafa.training.data.remote.dto.CartDataDTO
 import com.mostafa.training.data.remote.dto.CartItemDTO
 import com.mostafa.training.ui.components.Body
 import com.mostafa.training.ui.components.CheckUiState
-import com.mostafa.training.ui.components.ProfileImage
 import com.mostafa.training.ui.components.SpacerHorizontal
 import com.mostafa.training.ui.components.SpacerVertical
 import com.mostafa.training.ui.components.Title
@@ -57,7 +55,6 @@ import com.mostafa.training.ui.theme.AccentColor
 import com.mostafa.training.ui.theme.AppTypography
 import com.mostafa.training.ui.theme.CardBackgroundColor
 import com.mostafa.training.ui.theme.WhiteColor
-import org.koin.androidx.compose.getViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -69,19 +66,15 @@ fun CartScreen(
     calculateBottomPadding: Dp,
     navController: NavController
 ) {
-
     val viewModel: CartViewModel = koinViewModel()
+    viewModel.loadingProductsInCart()
     val cartUiState by viewModel.cartUiState.collectAsState()
-
 
     Scaffold(
         topBar = {
             Surface(elevation = 1.dp) {
                 TopAppBar(title = {
                     SpannableTextExample(fText = "Your\n", sText = "Shopping Cart")
-
-                }, actions = {
-                    ProfileImage(painter = painterResource(id = R.drawable.eg_flag))
                 })
             }
         }) { paddingValues ->
@@ -90,55 +83,70 @@ fun CartScreen(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            CheckUiState(
-                isLoading = cartUiState.isLoading,
-                error = cartUiState.error,
-                data = cartUiState.cartData,
-                sizeOfProgress = 30
-            ) { cartItems ->
-                LazyColumn(
-                    modifier = Modifier.weight(1.9f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(
-                        top = paddingValues.calculateTopPadding(),
-                        end = 8.dp,
-                        start = 8.dp,
-                        bottom = paddingValues.calculateBottomPadding()
-                    )
+            if (cartUiState.cartData?.cartItems.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    items(cartItems.cartItems!!) { cart ->
-                        CartItem(
-                            cart,
-                            quantity = viewModel.getCartItemQuantity(cart?.id!!),
-                            onQuantityChange = { newQuantity ->
-                                viewModel.updateCartItemQuantity(newQuantity, cart?.id!!)
-                            },
-                            onRemoveClick = {
-                                viewModel.addOrRemoveItemFromCart(it)
-                            }
+                    Text(
+                        text = "Try adding one first",
+                        style = AppTypography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                CheckUiState(
+                    isLoading = cartUiState.isLoading,
+                    error = cartUiState.error,
+                    data = cartUiState.cartData,
+                    sizeOfProgress = 30
+                ) { cartItems ->
+                    LazyColumn(
+                        modifier = Modifier.weight(1.9f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(
+                            top = paddingValues.calculateTopPadding(),
+                            end = 8.dp,
+                            start = 8.dp,
+                            bottom = paddingValues.calculateBottomPadding()
+                        )
+                    ) {
+                        items(cartItems.cartItems!!) { cart ->
+                            CartItem(
+                                cart,
+                                quantity = viewModel.getCartItemQuantity(cart?.id!!),
+                                onQuantityChange = { newQuantity ->
+                                    viewModel.updateCartItemQuantity(newQuantity, cart?.id!!)
+                                },
+                                onRemoveClick = {
+                                    viewModel.addOrRemoveItemFromCart(it)
+                                }
                             )
+                        }
                     }
                 }
-            }
 
-            CheckUiState(
-                isLoading = cartUiState.isLoading,
-                error = cartUiState.error,
-                data = cartUiState.cartData,
-                sizeOfProgress = 30
-            ) { cartItems ->
-                CheckOutContainer(
-                    cartItems = cartItems,
-                    navController = navController,
-                    calculateBottomPadding = calculateBottomPadding
-                )
+                CheckUiState(
+                    isLoading = cartUiState.isLoading,
+                    error = cartUiState.error,
+                    data = cartUiState.cartData,
+                    sizeOfProgress = 30
+                ) { cartItems ->
+                    CheckOutContainer(
+                        cartItems = cartItems,
+                        navController = navController,
+                        calculateBottomPadding = calculateBottomPadding
+                    )
+                }
+
             }
 
         }
-
     }
-
 }
+
 
 @Composable
 fun CheckOutContainer(

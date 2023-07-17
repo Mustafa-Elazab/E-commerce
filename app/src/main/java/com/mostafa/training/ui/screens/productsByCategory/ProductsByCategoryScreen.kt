@@ -25,6 +25,7 @@ import com.mostafa.training.data.remote.dto.ProductDTO
 import com.mostafa.training.ui.components.AppBar
 import com.mostafa.training.ui.components.CheckUiState
 import com.mostafa.training.ui.screens.cart.CartViewModel
+import com.mostafa.training.ui.screens.favorites.FavoritesViewModel
 import com.mostafa.training.ui.screens.home.ProductItem
 import com.mostafa.training.ui.screens.product_detail.navigateToDetailScreen
 import com.mostafa.training.ui.theme.BaseColor
@@ -37,13 +38,14 @@ fun ProductsByCategoryScreen(navController: NavController) {
 
     val viewModel: ProductsByCategoryViewModel = koinViewModel()
     val cartViewModel: CartViewModel = getViewModel()
+    val favoritesViewModel: FavoritesViewModel = getViewModel()
     val productsByCategoryUiState = viewModel.productsUiState.collectAsState().value
     val context = LocalContext.current
 
     Scaffold(topBar = {
         Surface(elevation = 1.dp) {
             AppBar(
-                title ="",
+                title = "",
                 painter = painterResource(id = R.drawable.ic_left_back)
             ) {
                 navController.popBackStack()
@@ -63,6 +65,9 @@ fun ProductsByCategoryScreen(navController: NavController) {
                     onClickProductItem = navController::navigateToDetailScreen,
                     onClickAddToCart = {
                         cartViewModel.addOrRemoveItemFromCart(product_id = it)
+                    },
+                    onClickItemFavorites = {
+                        favoritesViewModel.addOrRemoveFavorites(it)
                     }
                 )
             }
@@ -75,7 +80,8 @@ fun LazyGridProducts(
     products: List<ProductDTO>,
     paddingValues: Dp,
     onClickProductItem: (Int) -> Unit,
-    onClickAddToCart: (Int) -> Unit
+    onClickAddToCart: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit
 ) {
     LazyVerticalGrid(
         modifier = Modifier
@@ -102,7 +108,8 @@ fun LazyGridProducts(
                 isSearchScreen = false,
                 onClickProductItem = onClickProductItem,
                 modifier = Modifier,
-                onClickItemCart = onClickAddToCart
+                onClickItemCart = onClickAddToCart,
+                onClickItemFavorites = onClickItemFavorites
             )
         }
     }

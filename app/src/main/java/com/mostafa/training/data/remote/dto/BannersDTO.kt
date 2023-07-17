@@ -1,15 +1,16 @@
 package com.mostafa.training.data.remote.dto
 
 
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
-@Serializable
+
 data class BannersDTO(
-
+    @SerializedName("data")
     val `data`: List<BannerDTO?>?,
-
-    val message: String?,
-
+    @SerializedName("message")
+    val message: Any?,
+    @SerializedName("status")
     val status: Boolean?
 )
 
@@ -23,14 +24,14 @@ data class CategoryDTO(
     val name: String?
 )
 
-@Serializable
+
 data class BannerDTO(
-
+    @SerializedName("category")
     val category: CategoryDTO?,
-
+    @SerializedName("id")
     val id: Int?,
-
+    @SerializedName("image")
     val image: String?,
-
+    @SerializedName("product")
     val product: ProductDTO?
 )

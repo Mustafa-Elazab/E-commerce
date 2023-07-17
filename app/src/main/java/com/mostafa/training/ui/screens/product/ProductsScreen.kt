@@ -26,6 +26,7 @@ import com.mostafa.training.data.remote.dto.ProductDTO
 import com.mostafa.training.ui.components.AppBar
 import com.mostafa.training.ui.components.CheckUiState
 import com.mostafa.training.ui.screens.cart.CartViewModel
+import com.mostafa.training.ui.screens.favorites.FavoritesViewModel
 import com.mostafa.training.ui.screens.home.HomeViewModel
 import com.mostafa.training.ui.screens.home.ProductItem
 import com.mostafa.training.ui.screens.product_detail.navigateToDetailScreen
@@ -38,6 +39,7 @@ fun ProductsScreen(navController: NavController) {
 
     val viewModel: HomeViewModel = getViewModel()
     val cartViewModel: CartViewModel = getViewModel()
+    val favoritesViewModel: FavoritesViewModel = getViewModel()
     val productsUiState by viewModel.productsUiState.collectAsState()
 
     Scaffold(
@@ -68,7 +70,9 @@ fun ProductsScreen(navController: NavController) {
                     onClickProductItem = {
                         navController.navigateToDetailScreen(it)
                     },
-
+                    onClickItemFavorites={
+                        favoritesViewModel.addOrRemoveFavorites(it)
+                    }
 
                     )
             }
@@ -84,6 +88,7 @@ fun ProductContainer(
     paddingValues: Dp,
     isSearchScreen: Boolean,
     onClickAddToCart: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit,
     onClickProductItem: (Int) -> Unit,
 
     ) {
@@ -116,7 +121,8 @@ fun ProductContainer(
                 isSearchScreen = isSearchScreen,
                 onClickProductItem = onClickProductItem,
                 modifier = Modifier.animateItemPlacement(),
-                onClickItemCart = onClickAddToCart
+                onClickItemCart = onClickAddToCart,
+                onClickItemFavorites =onClickItemFavorites
             )
 
         }

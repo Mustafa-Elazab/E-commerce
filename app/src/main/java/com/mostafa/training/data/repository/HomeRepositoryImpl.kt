@@ -37,8 +37,9 @@ class HomeRepositoryImpl(
             is NetworkResponse.Success -> emit(NetworkResponse.Success(get.body))
             is NetworkResponse.UnknownError -> emit(NetworkResponse.UnknownError(get.error))
         }
-
     }
+
+
     override suspend fun getProductDetail(
         id: Int,
         authorization: String

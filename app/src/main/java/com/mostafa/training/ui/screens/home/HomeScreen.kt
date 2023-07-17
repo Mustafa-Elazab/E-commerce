@@ -1,8 +1,6 @@
 package com.mostafa.training.ui.screens.home
 
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -66,13 +63,13 @@ import com.mostafa.training.data.remote.dto.CategoryDTO
 import com.mostafa.training.data.remote.dto.ProductDTO
 import com.mostafa.training.ui.components.Body
 import com.mostafa.training.ui.components.CheckUiState
-import com.mostafa.training.ui.components.ClickableIcon
 import com.mostafa.training.ui.components.ProfileImage
 import com.mostafa.training.ui.components.SpacerHorizontal
 import com.mostafa.training.ui.components.SpacerVertical
 import com.mostafa.training.ui.components.Title
 import com.mostafa.training.ui.screens.cart.CartViewModel
 import com.mostafa.training.ui.screens.category.navigateToCategoryScreen
+import com.mostafa.training.ui.screens.favorites.FavoritesViewModel
 import com.mostafa.training.ui.screens.home.ui_state.BannerUiState
 import com.mostafa.training.ui.screens.home.ui_state.CategoryUiState
 import com.mostafa.training.ui.screens.home.ui_state.ProductsUiState
@@ -80,6 +77,8 @@ import com.mostafa.training.ui.screens.notification.navigateToNotifications
 import com.mostafa.training.ui.screens.product.navigateToProductsScreen
 import com.mostafa.training.ui.screens.product_detail.navigateToDetailScreen
 import com.mostafa.training.ui.screens.productsByCategory.navigateToProductsByCategoryScreen
+import com.mostafa.training.ui.screens.profile.ProfileViewModel
+import com.mostafa.training.ui.screens.profile.uiState.ProfileUiState
 import com.mostafa.training.ui.theme.AccentColor
 import com.mostafa.training.ui.theme.AppTypography
 import com.mostafa.training.ui.theme.BaseColor
@@ -99,10 +98,13 @@ fun HomeScreen(
     ) {
     val viewModel: HomeViewModel = koinViewModel()
     val cartViewModel: CartViewModel = getViewModel()
-
+    val favoritesViewModel: FavoritesViewModel = getViewModel()
+    val profileViewModel: ProfileViewModel = getViewModel()
     val bannerUiState by viewModel.bannersUiState.collectAsState()
     val categoryUiState by viewModel.categoriesUiState.collectAsState()
     val productsUiState by viewModel.productsUiState.collectAsState()
+    val profileUiState by profileViewModel.profileUiState.collectAsState()
+
 
     val context = LocalContext.current
 
@@ -112,6 +114,7 @@ fun HomeScreen(
         bannerUiState = bannerUiState,
         categoryUiState = categoryUiState,
         productsUiState = productsUiState,
+        profileUiState = profileUiState,
         context = context,
         onClickProducts = navController::navigateToProductsScreen,
         onClickProductItem = navController::navigateToDetailScreen,
@@ -119,7 +122,13 @@ fun HomeScreen(
         onClickNotificationButton = navController::navigateToNotifications,
         onClickItemCart = {
             cartViewModel.addOrRemoveItemFromCart(it)
+            viewModel.loadProducts()
+        },
+        onClickItemFavorites = {
+            favoritesViewModel.addOrRemoveFavorites(it)
+            viewModel.loadProducts()
         }
+
     )
 
 }
@@ -137,7 +146,9 @@ fun HomeContent(
     onClickProductItem: (Int) -> Unit,
     onClickCategories: () -> Unit,
     onClickNotificationButton: () -> Unit,
-    onClickItemCart: (Int) -> Unit
+    onClickItemCart: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit,
+    profileUiState: ProfileUiState
 ) {
 
 
@@ -145,8 +156,29 @@ fun HomeContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { },
-                actions = { AppBar(onClickNotificationButton) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        ProfileImage(painter = rememberAsyncImagePainter(model = profileUiState.profileData?.image.toString()))
+                        SpacerHorizontal(width = 2)
+                        SpannableTextExample(
+                            fText = "Hi,",
+                            sText = profileUiState.profileData?.name.toString()
+                        )
+
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { onClickNotificationButton() },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_notification),
+                            contentDescription = ""
+                        )
+                    }
+                },
                 scrollBehavior = scrollBehavior
             )
         }, containerColor = BaseColor
@@ -188,7 +220,6 @@ fun HomeContent(
                 }
             }
             item {
-                SpacerVertical(height = 8)
                 ProductHeader(onClickProducts = onClickProducts)
                 SpacerVertical(height = 8)
                 CheckUiState(
@@ -197,10 +228,13 @@ fun HomeContent(
                     data = productsUiState.products,
                     sizeOfProgress = 30
                 ) { products ->
+
                     ProductsItems(
+
                         products,
                         onClickProductItem = onClickProductItem,
-                        onClickItemCart = onClickItemCart
+                        onClickItemCart = onClickItemCart,
+                        onClickItemFavorites = onClickItemFavorites,
                     )
                 }
             }
@@ -212,7 +246,8 @@ fun HomeContent(
 fun ProductsItems(
     products: List<ProductDTO>,
     onClickProductItem: (Int) -> Unit,
-    onClickItemCart: (Int) -> Unit
+    onClickItemCart: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit
 ) {
     LazyRow(
         modifier = Modifier.fillMaxSize(),
@@ -221,10 +256,14 @@ fun ProductsItems(
     ) {
         products.let {
             items(it) { product ->
+
                 ProductItem(
                     product,
                     isSearchScreen = false,
                     onClickProductItem = onClickProductItem,
+                    onClickItemFavorites = {
+                        onClickItemFavorites(it)
+                    },
                     onClickItemCart = {
                         onClickItemCart(it)
                     },
@@ -241,16 +280,17 @@ fun ProductItem(
     isSearchScreen: Boolean,
     onClickProductItem: (Int) -> Unit,
     modifier: Modifier,
-    onClickItemCart: (Int) -> Unit
+    onClickItemCart: (Int) -> Unit,
+    onClickItemFavorites: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    val cartViewModel: CartViewModel = getViewModel()
-    val addOrRemoveUiState by cartViewModel.addOrRemoveUiState.collectAsState()
-    Log.d("TAG", "ProductItem: ${product}")
+
+
 
     Card(
         modifier = Modifier
-            .width(150.dp)
+            .width(160.dp)
+            .height(270.dp)
             .clickable { onClickProductItem(product.id!!) },
         colors = CardDefaults.cardColors(CardBackgroundColor),
         elevation = CardDefaults.cardElevation(
@@ -272,41 +312,53 @@ fun ProductItem(
         Column(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
-                .wrapContentHeight(),
-            horizontalAlignment = Alignment.Start
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Title(title = product.name.toString(), style = AppTypography.titleSmall)
-            SpacerVertical(height = 4)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Column(
+                modifier = Modifier,
+                horizontalAlignment = Alignment.Start
             ) {
-                Column(
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.Start
+                Title(title = product.name.toString(), style = AppTypography.titleSmall)
+                SpacerVertical(height = 4)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Body(
-                        title = "${product.price.toString()}  Egp",
-                        style = AppTypography.bodySmall
-                    )
-
-
-                }
-
-                if (!isSearchScreen) {
-                    if (product.discount!! > 0) {
+                    Column(
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.Start
+                    ) {
                         Body(
-                            title = "${product.discount.toString()} %",
-                            style = AppTypography.bodySmall,
-                            color = Red
+                            title = "${product.price.toString()}  Egp",
+                            style = AppTypography.bodySmall
                         )
+                       if(!isSearchScreen){
+                           if (product.discount!! > 0) {
+                               TextWithStrikethrough(product.oldPrice.toString())
+                           }
+                       }
+
                     }
+
+                    if (!isSearchScreen) {
+                        if (product.discount!! > 0) {
+                            Body(
+                                title = "${product.discount.toString()} %",
+                                style = AppTypography.bodySmall,
+                                color = Red
+                            )
+                        }
+                    }
+
                 }
 
             }
-            SpacerVertical(height = 6)
+
+
             Row(
                 modifier = Modifier
                     .padding(horizontal = 4.dp)
@@ -314,39 +366,38 @@ fun ProductItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ClickableIcon(
-                    painter = painterResource(id = R.drawable.ic_unselected_fav),
-                    contentDescription = "",
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable { }
-
-                )
-
 
                 IconButton(
                     onClick = {
-
-                        Toast.makeText(context,
-                            product.inCart.toString(),
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        onClickItemCart(product.id!!)
-
-//                        if(product.id == addOrRemoveUiState.addRemoveCartItemDTO!!.data!!.product!!.id){
-//                            Toast.makeText(context,
-//                                addOrRemoveUiState.addRemoveCartItemDTO?.message.toString(), Toast.LENGTH_SHORT).show()
-//                        }
-
-
-
+                        onClickItemFavorites(product?.id!!)
                     },
                     modifier = Modifier
                         .clip(CircleShape)
                 ) {
 
-                    val cartIcon = if (product.inCart) {
+                    val cartIcon = if (product.inFavorites!! == true) {
+                        painterResource(id = R.drawable.ic_selected_fav)
+                    } else {
+                        painterResource(id = R.drawable.ic_unselected_fav)
+                    }
+
+                    Icon(
+                        painter = cartIcon,
+                        contentDescription = ""
+                    )
+                }
+
+
+
+                IconButton(
+                    onClick = {
+                        onClickItemCart(product.id!!)
+                    },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                ) {
+
+                    val cartIcon = if (product.inCart!! == true) {
                         painterResource(id = R.drawable.ic_selected_cart)
                     } else {
                         painterResource(id = R.drawable.ic_unselected_cart)
@@ -360,8 +411,6 @@ fun ProductItem(
 
 
             }
-
-            SpacerVertical(height = 6)
 
 
         }

@@ -108,6 +108,7 @@ fun NotificationItem(notification: NotificationDTO) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start,
+            modifier = Modifier.padding(8.dp)
         ) {
             Title(
                 title = notification.title.toString(),

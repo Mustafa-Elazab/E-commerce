@@ -1,11 +1,15 @@
 package com.mostafa.training.data.remote
 
+import com.mostafa.training.data.remote.dto.AddOrRemoveFavoritesDTO
 import com.mostafa.training.data.remote.dto.AddRemoveCartItemDTO
 import com.mostafa.training.data.remote.dto.BannersDTO
 import com.mostafa.training.data.remote.dto.CartDTO
 import com.mostafa.training.data.remote.dto.CartUpdateDTO
 import com.mostafa.training.data.remote.dto.CategoriesDTO
+import com.mostafa.training.data.remote.dto.ContactDTO
 import com.mostafa.training.data.remote.dto.ErrorResponse
+import com.mostafa.training.data.remote.dto.FaqsDTO
+import com.mostafa.training.data.remote.dto.FavoritesDTO
 import com.mostafa.training.data.remote.dto.NotificationsDTO
 import com.mostafa.training.data.remote.dto.ProductsDTO
 import com.mostafa.training.data.remote.dto.ProductsDetailDTO
@@ -80,6 +84,7 @@ interface ApiServices {
     ): NetworkResponse<CartDTO, ErrorResponse>
 
 
+
     @DELETE("carts/{id}")
     suspend fun deleteFromCart(
         @Path("id") id: Int,
@@ -93,6 +98,14 @@ interface ApiServices {
         @Query("quantity") quantity: Int
     ): NetworkResponse<CartUpdateDTO, ErrorResponse>
 
+    @GET("contacts")
+    suspend fun getContact(
+    ): NetworkResponse<ContactDTO, ErrorResponse>
+
+    @GET("faqs")
+    suspend fun getFaqs(
+    ): NetworkResponse<FaqsDTO, ErrorResponse>
+
 
 
 
@@ -100,6 +113,20 @@ interface ApiServices {
     suspend fun getProfile(
         @Header("Authorization") authorization: String,
     ): NetworkResponse<ProfileDTO, ErrorResponse>
+
+
+    @POST("favorites")
+    suspend fun addOrRemoveFavoriteItem(
+        @Header("Authorization") authorization: String,
+        @Query("product_id") product_id: Int
+    ): NetworkResponse<AddOrRemoveFavoritesDTO, ErrorResponse>
+
+
+    @GET("favorites")
+    suspend fun getFavoritesItems(
+        @Header("Authorization") authorization: String,
+    ): NetworkResponse<FavoritesDTO, ErrorResponse>
+
 
 
 
